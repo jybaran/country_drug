@@ -93,6 +93,12 @@ working_data %>%
   group_by(state_legislature) %>%
   summarise(mean = mean(opioid_prescribing_rate))
 
+working_data %>%
+  group_by(state) %>%
+  summarise(avg_rate = mean(opioid_prescribing_rate)) %>%
+  arrange(avg_rate) %>%
+  head(5)
+
 ```
 
 ## Summary 1: Quartile distribution of county population sizes
@@ -102,6 +108,7 @@ We thought it might be pertinent to our investigation to have some sense of the 
 In order to get a better sense of what "normal" versus "extreme" might look like in the sense of opioid prescription rate, we took a look at the five lowest and five highest prescription rates. We wanted to see, first and foremost, if the highest rates were clustered closely together, or if there were some notable standouts. We were also interested in determining what these values tend to look like. We were able to observe that all but the highest prescribing rate fall below 19% (the highest is >30%). We were also able to determine that the lowest values do not share similar variation.
 
 ## Summary 3: Mean opioid prescription rate by state legislature composition
-We wanted to determine whether there might be a significant association between political party and prescribing rates. After running these numbers, we observed that Republican and Democratic legislatures have nearly identical mean rates of prescription, and spli legislatures are only slightly lower. Nebraska is a unicameral legislature and has an even lower mean, though we are chalking this up to it's status as the singular unicameral legislative body in the nation.
+We wanted to determine whether there might be a significant association between political party and prescribing rates. After running these numbers, we observed that Republican and Democratic legislatures have nearly identical mean rates of prescription, and split legislatures are only slightly lower. Nebraska is a unicameral legislature and has an even lower mean, though we are chalking this up to it's status as the singular unicameral legislative body in the nation.
 
-## Summary 4: 
+## Summary 4: Highest prescribing states
+As we began to wind down our preliminary visualizations, we decided to determine which 5 states had the highest average (mean) prescribing rates and which had the lowest. The highest states included Nevada, Washington, Utah, Colorado, and Oregon, while the lowest were Rhode Island, New York, North Dakota, Massachusetts, and New Jersey (both lists in descending order). This summary has helped us to better observe the presence of a regional divide in prescribing practices (east vs. west), and it presents some interesting ideas as we think about ways in which we may want to expand on our data (i.e. categorizing states by region to perform more aggregate analyses).
