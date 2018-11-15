@@ -2,7 +2,9 @@
 title: "Rmd File"
 author: "Emily Daubenspeck"
 date: "November 14, 2018"
-output: pdf_document
+output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Instructions
@@ -65,3 +67,18 @@ ggplot(working_data, aes(x = change_in_rate, y = opioid_prescribing_rate)) +
   geom_point()
 ## Note: weird upper outlier is a county in WA (Skamania) that had an increase in prescribing rate equal to the rate it shows now. This indicates that they might not have had data collected in 2013, or they didn't have any prescribers)
 ```
+
+## Plot 1: Checking normality of response variable (opioid prescription rate)
+The first graph in this series of initial visualizations is meant to help determine if the values of our response variable are distributed normally among the many counties (n > 2,000) that we will be using for analysis. We observe from this graph that the values are centered between 5% and 6%, and that they do not show any notable skew towards higher or lower values. If we decide to pursue regression, this is a huge positive.
+
+## Plot 2: Examining makeup of state legislatures versus state harm reduction policies
+We wanted to get a look at whether our initial intuition--that democrat-leaning states would represent a greater proportion of the states with comprehensive harm reduction policies--holds up within this data set. Actually, we note that in general, republican-leaning counties make up a larger proportion of our sample, and while they do make up the largest proportion of states without comprehensive HR policies, they also make up the largest proportion of states that do have these measures in place. This leads us to consider the results we might observe in our future analysis, which is based around the intution that more conservative states/counties will be less progressive in their harm reduction policy and have higher opioid prescription rates.
+
+## Plot 3: Comparing harm reduction policy with opioid-prescription rate (state-level)
+With this plot, we wanted to get a sense of whether basic harm reduction initatives, like needle exchanges, showed any obvious relationship with opioid prescribing rate (the intuition being that states implementing HR policies may also be taking steps to curb their opioid prescribing rate). We actually saw that there is a slight positive association between the number of needle exchanges and the prescribing rate, which in a way also makes a certain amount of sense. However, this association is relatively weak.
+
+## Plot 4: Correlation of variables of interest (numeric)
+As we are limited to calculating a correlation matrix for numeric variables, this is what we decided to do. We omitted variables associated with race because they would have made the table too large, and this is only a preliminary look. We observed that high correlation (0.5 < |cor|) is only really occurring where it is to be expected, between the proportions of male and female residents, as well as between the poverty rate and the unemployment rate. We might consider evaluating this second set of variables for relevance; perhaps one should be removed to lessen the potential for multicolinearity to interfere with model fitting.
+
+## Plot 5: Scatterplot of opioid prescription rate versus change in that rate (since 2013)
+This final scatterplot was created in order to investigate the relationship between prescription rate and the change in this rate since 2013. We wanted to evaluate whether high prescribing rates were coupled with significant decreases or increases in those rates over the temporal span between 2013 and 2015; we observed that the changes in rates are primarily clustered in the range [-5, 5] and that these changes guide prescription rates to within [1, 10], primarily. There is a single highly unusual county indicated as having both a prescribing rate and change in rate of 31.76; after looking specifically at this county, we have determined that perhaps prescription rate data was not available for this area in 2013, and so the "change in rate" simply jumped when data were eventually added. We will consider whether to include this case if change in prescription rate becomes a variable we'd like to explore further.
