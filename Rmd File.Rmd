@@ -41,4 +41,9 @@ working_data <- County_Drug %>%
 
 ```{r, messaage = FALSE, warning = FALSE}
 
+ggplot(working_data, aes(x = opioid_prescribing_rate)) + 
+  geom_histogram()
+
+ggplot(working_data, aes(x = overall_claims)) + 
+  geom_histogram(binwidth = 1000)
 ```
