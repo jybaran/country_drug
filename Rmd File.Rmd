@@ -25,5 +25,5 @@ If your plan was to do classification and then regression, could the class on No
 Leverage cross-validation with different number of folds to tune various hyper-parameters (such as penalties or the k in kNN).
 
 ```{r, message = FALSE, warning = FALSE}
-
+County_Drug <- read_csv("County_Drug.csv")
 ```
