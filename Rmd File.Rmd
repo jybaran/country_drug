@@ -9,8 +9,6 @@ editor_options:
 
 ## Instructions
 
-*Make at least 5 images of your data, noting what you have learned about your data as a result of creating these images
-
 *Create numerical summaries for at least 4 variables in your dataset. 
 
 *What did you learn about your data as a result of creating these summaries?
@@ -65,7 +63,6 @@ corrplot(cor_data, method = "circle")
 
 ggplot(working_data, aes(x = change_in_rate, y = opioid_prescribing_rate)) + 
   geom_point()
-## Note: weird upper outlier is a county in WA (Skamania) that had an increase in prescribing rate equal to the rate it shows now. This indicates that they might not have had data collected in 2013, or they didn't have any prescribers)
 ```
 
 ## Plot 1: Checking normality of response variable (opioid prescription rate)
@@ -82,3 +79,29 @@ As we are limited to calculating a correlation matrix for numeric variables, thi
 
 ## Plot 5: Scatterplot of opioid prescription rate versus change in that rate (since 2013)
 This final scatterplot was created in order to investigate the relationship between prescription rate and the change in this rate since 2013. We wanted to evaluate whether high prescribing rates were coupled with significant decreases or increases in those rates over the temporal span between 2013 and 2015; we observed that the changes in rates are primarily clustered in the range [-5, 5] and that these changes guide prescription rates to within [1, 10], primarily. There is a single highly unusual county indicated as having both a prescribing rate and change in rate of 31.76; after looking specifically at this county, we have determined that perhaps prescription rate data was not available for this area in 2013, and so the "change in rate" simply jumped when data were eventually added. We will consider whether to include this case if change in prescription rate becomes a variable we'd like to explore further.
+
+```{r, message = FALSE, warning = FALSE}
+## numerical summaries
+library(mosaic)
+library(Hmisc)
+
+favstats(working_data$population)
+
+describe(working_data$opioid_prescribing_rate)
+
+working_data %>%
+  group_by(state_legislature) %>%
+  summarise(mean = mean(opioid_prescribing_rate))
+
+```
+
+## Summary 1: Quartile distribution of county population sizes
+We thought it might be pertinent to our investigation to have some sense of the range of population sizes represented in our sample. We see that the median size is 33573 while the mean is 120263, indicating that this distribution is likely skewed towards higher populations.
+
+## Summary 2: Highest and lowest opioid prescription rates
+In order to get a better sense of what "normal" versus "extreme" might look like in the sense of opioid prescription rate, we took a look at the five lowest and five highest prescription rates. We wanted to see, first and foremost, if the highest rates were clustered closely together, or if there were some notable standouts. We were also interested in determining what these values tend to look like. We were able to observe that all but the highest prescribing rate fall below 19% (the highest is >30%). We were also able to determine that the lowest values do not share similar variation.
+
+## Summary 3: Mean opioid prescription rate by state legislature composition
+We wanted to determine whether there might be a significant association between political party and prescribing rates. After running these numbers, we observed that Republican and Democratic legislatures have nearly identical mean rates of prescription, and spli legislatures are only slightly lower. Nebraska is a unicameral legislature and has an even lower mean, though we are chalking this up to it's status as the singular unicameral legislative body in the nation.
+
+## Summary 4: 
