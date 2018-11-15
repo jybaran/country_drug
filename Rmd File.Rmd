@@ -94,6 +94,12 @@ working_data %>%
   group_by(state) %>%
   summarise(avg_rate = mean(opioid_prescribing_rate)) %>%
   arrange(avg_rate) %>%
+  tail(5)
+
+working_data %>%
+  group_by(state) %>%
+  summarise(avg_rate = mean(opioid_prescribing_rate)) %>%
+  arrange(avg_rate) %>%
   head(5)
 
 ```
