@@ -61,6 +61,7 @@ cor_data <- cor(numeric_only) %>%
   round(2)
 corrplot(cor_data, method = "circle")
 
-
-
+ggplot(working_data, aes(x = change_in_rate, y = opioid_prescribing_rate)) + 
+  geom_point()
+## Note: weird upper outlier is a county in WA (Skamania) that had an increase in prescribing rate equal to the rate it shows now. This indicates that they might not have had data collected in 2013, or they didn't have any prescribers)
 ```
