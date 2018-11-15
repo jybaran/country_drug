@@ -9,9 +9,6 @@ editor_options:
 
 ## Instructions
 
-*Create numerical summaries for at least 4 variables in your dataset. 
-
-*What did you learn about your data as a result of creating these summaries?
 
 Attempt to implement at least 3 versions of your team's highest priority method as outlined in the revised proposal. This could look like:
 
