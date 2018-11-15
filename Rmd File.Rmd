@@ -5,26 +5,25 @@ date: "November 14, 2018"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Instructions
+
+*Make at least 5 images of your data, noting what you have learned about your data as a result of creating these images
+
+*Create numerical summaries for at least 4 variables in your dataset. 
+
+*What did you learn about your data as a result of creating these summaries?
+
+Attempt to implement at least 3 versions of your team's highest priority method as outlined in the revised proposal. This could look like:
+
+If you are focusing on regression, you could:
+Run a few bivariate regression models
+Try a few subset selection methods
+Experiment with ridge regression and lasso
+
+If you are prioritizing classification, you could try kNN, QDA, LDA, and Logistic regression (and comparing the assumptions violated in each)
+If your plan was to do classification and then regression, could the class on November 12 provide inspiration?
+Leverage cross-validation with different number of folds to tune various hyper-parameters (such as penalties or the k in kNN).
+
+```{r, message = FALSE, warning = FALSE}
+
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
