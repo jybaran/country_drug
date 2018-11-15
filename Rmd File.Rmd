@@ -25,5 +25,15 @@ If your plan was to do classification and then regression, could the class on No
 Leverage cross-validation with different number of folds to tune various hyper-parameters (such as penalties or the k in kNN).
 
 ```{r, message = FALSE, warning = FALSE}
+## reading in data files, joining to access prescribing behavior (response vars)
+library(tidyverse)
 County_Drug <- read_csv("County_Drug.csv")
+prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
+  mutate(county_id = paste0("05000US", FIPS))
+
+## joining data sets
+working_data <- County_Drug %>%
+  inner_join(prescribing_behavior, by = "county_id")
+  
+
 ```
