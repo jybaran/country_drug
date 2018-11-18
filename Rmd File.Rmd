@@ -122,8 +122,8 @@ As we began to wind down our preliminary visualizations, we decided to determine
 ## methods set up
 library(class)
 
-working_data$over_avg_rx_rate = 0
-working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
+working_data$over_avg_rx_rate = "Low"
+working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = "High"
 
 ## setting up testing & training datasets
 working_data$id <- 1:nrow(working_data)
@@ -163,13 +163,34 @@ glm_party_fit <- glm(over_avg_rx_rate ~
                      family = "binomial")
 
 summary(glm_party_fit)
+
+glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + average_age + state_legislature, data = train, family = "binomial")
+
+glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
+glm_pred <- glm_probs %>%
+  mutate(pred = ifelse(probs > 0.5, "High", "Low"))
+
+glm_pred <- cbind(test, glm_pred)
+glm_pred <- glm_pred %>%
+  count(pred, over_avg_rx_rate) %>%
+  spread(over_avg_rx_rate, n, fill = 0)
+glm_pred <- glm_pred %>%
+  summarize(score = mean(pred == over_avg_rx_rate), 
+            recip = mean(pred != over_avg_rx_rate))
+
 ```
+
 
 
 ## Method 1: Logistic Regression
 For this first attempt, we considered unemployment rate, high school graduation rate, average age, population, male proportion, number of needle exchange programs, and poverty rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). Based on p-values, it looks like population, male proportion, number of needle exchanges, and poverty rate are unlikely to be strongly related to over-average prescription of opioids. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both high school graduation rate and unemployment rate are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independent, and we actually found some correlation between high school graduation rate and unemployment rate in plot 4.
 
 In our second attempt at Logistic Regression (glm_party_fit), we incorporated our variable of most interest, which is a four-level indicator of state legislature party dominance, as well as our assortment of race and ethnicity-related variables (given as proportions of the counties' populations). The variable `state-legislature` reports party dominance (Republican or Democrat) in the following manner: "Democrat" indicates Democratic control of both houses, "Republican" represents Republican control of both houses, "Split" indicates Democratic control in one house and Republican control in the other, and "Unicameral" applies only to counties in Nebraska (the state has a single legislative house). Democratic control was set as our reference group. We observe in the summary output that Republican control of both houses is significantly associated with an increase in the liklihood that a county will have an opioid prescription rate above the median (p-value < 0.01). This is highly encouraging, as this is the result we expected to see, based on our intuition.
+
+```{r, message = FALSE, warning = FALSE}
+
+
+```
 
 ```{r}
 ## knn
