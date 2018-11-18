@@ -117,7 +117,7 @@ We wanted to determine whether there might be a significant association between 
 As we began to wind down our preliminary visualizations, we decided to determine which 5 states had the highest average (mean) prescribing rates and which had the lowest. The highest states included Nevada, Washington, Utah, Colorado, and Oregon, while the lowest were Rhode Island, New York, North Dakota, Massachusetts, and New Jersey (both lists in descending order). This summary has helped us to better observe the presence of a regional divide in prescribing practices (east vs. west), and it presents some interesting ideas as we think about ways in which we may want to expand on our data (i.e. categorizing states by region to perform more aggregate analyses).
 
 ```{r}
-## first attempt at methods
+## methods set up
 library(class)
 
 working_data$over_avg_rx_rate = 0
@@ -128,6 +128,11 @@ working_data$id <- 1:nrow(working_data)
 train = working_data %>% dplyr::sample_frac(.75)
 test = dplyr::anti_join(working_data, train, by = 'id')
 
+set.seed(1)
+```
+
+
+```{r}
 ## logistic regression
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 hs_graduation_rate +
@@ -140,6 +145,7 @@ glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                   family = binomial)
 summary(glm_fit)
 ```
+
 
 ## Method 1: Logistic Regression
 For this first attempt, we considered unemployment rate, high school graduation rate, average age, population, male proportion, number of needle exchange programs, and poverty rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). Based on p-values, it looks like population, male proportion, number of needle exchanges, and poverty rate are unlikely to be strongly related to over-average prescription of opioids. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both high school graduation rate and unemployment rate are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independent, and we actually found some correlation between high school graduation rate and unemployment rate in plot 4.
@@ -157,7 +163,6 @@ knn_test_rx_rate = test %>%
   select(over_avg_rx_rate) %>%
   .$over_avg_rx_rate
 
-set.seed(1)
 knn_pred_1 = knn(knn_train,
                knn_test,
                knn_train_rx_rate,
@@ -193,3 +198,5 @@ mean(knn_pred_10 == knn_test_rx_rate)
 
 ## Method 2: KNN
 In this attempt, we used KNN with high school graduation rate and unemployment rate. In this case, after trying with several different values of k (1, 3, 5, 10), we found that we were predicting with around 50% accuracy, and that there wasn't a significant change in accuracy when we changed k, indicating that perhaps KNN isn't the right method here.
+
+## Method 3: ??? to classify states as over- or under-prescribing (relative to country-wide average)
