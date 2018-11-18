@@ -200,3 +200,5 @@ mean(knn_pred_10 == knn_test_rx_rate)
 In this attempt, we used KNN with high school graduation rate and unemployment rate. In this case, after trying with several different values of k (1, 3, 5, 10), we found that we were predicting with around 50% accuracy, and that there wasn't a significant change in accuracy when we changed k, indicating that perhaps KNN isn't the right method here.
 
 ## Method 3: ??? to classify states as over- or under-prescribing (relative to country-wide average)
+
+Probably not KNN because KNN requires numeric predictors, and we would need to figure out how to make evenly spaced numeric representations of each state.
