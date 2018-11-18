@@ -29,7 +29,7 @@ County_Drug <- read_csv("County_Drug.csv")
 prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
   mutate(county_id = paste0("05000US", FIPS)) %>%
   subset(select = -c(`State Name`, `State Abbreviation`, `County Name`, `FIPS`))
-colnames(prescribing_behavior) <- c("part_d_prescribers", "part_d_opiod_prescribers", "opiod_claims", "extended_release_opioid_claims", "overall_claims", "opioid_prescribing_rate", "extended_release_prescription_rate", "change_in_rate", "county_id")
+colnames(prescribing_behavior) <- c("part_d_prescribers", "part_d_opioid_prescribers", "opioid_claims", "extended_release_opioid_claims", "overall_claims", "opioid_prescribing_rate", "extended_release_prescription_rate", "change_in_rate", "county_id")
 
 ## joining data sets
 working_data <- County_Drug %>%
@@ -115,3 +115,11 @@ We wanted to determine whether there might be a significant association between 
 
 ## Summary 4: Highest prescribing states
 As we began to wind down our preliminary visualizations, we decided to determine which 5 states had the highest average (mean) prescribing rates and which had the lowest. The highest states included Nevada, Washington, Utah, Colorado, and Oregon, while the lowest were Rhode Island, New York, North Dakota, Massachusetts, and New Jersey (both lists in descending order). This summary has helped us to better observe the presence of a regional divide in prescribing practices (east vs. west), and it presents some interesting ideas as we think about ways in which we may want to expand on our data (i.e. categorizing states by region to perform more aggregate analyses).
+
+```{r}
+## first attempt at methods
+
+working_data$over_avg_rx_rate = 0
+working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
+```
+
