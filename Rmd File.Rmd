@@ -118,6 +118,7 @@ As we began to wind down our preliminary visualizations, we decided to determine
 
 ```{r}
 ## first attempt at methods
+library(class)
 
 working_data$over_avg_rx_rate = 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
@@ -129,18 +130,66 @@ test = dplyr::anti_join(working_data, train, by = 'id')
 
 ## logistic regression
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
-                    hs_graduation_rate,
+                hs_graduation_rate +
+                average_age +
+                population +
+                male_proportion +
+                num_exchange +
+                poverty_rate,
                   data=working_data,
                   family = binomial)
 summary(glm_fit)
-
-## knn
-knn_train = train %>% select()
-knn_test = test %>% select()
-knn_train_rx_rate = train %>% select()
 ```
 
 ## Method 1: Logistic Regression
-For this first attempt, we considered unemployment rate and high school graduation rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). These two predictors were chosen due to their slight indicated correlation with opiod prescribing rate in Plot 4. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both predictors here are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independant, and we actually found some correlation between high school graduation rate and unemployment rate.
+For this first attempt, we considered unemployment rate, high school graduation rate, average age, population, male proportion, number of needle exchange programs, and poverty rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). Based on p-values, it looks like population, male proportion, number of needle exchanges, and poverty rate are unlikely to be strongly related to over-average prescription of opioids. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both high school graduation rate and unemployment rate are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independent, and we actually found some correlation between high school graduation rate and unemployment rate in plot 4.
+
+```{r}
+## knn
+knn_train = train %>%
+  select(unemployment_rate, hs_graduation_rate)
+knn_test = test %>%
+  select(unemployment_rate, hs_graduation_rate)
+knn_train_rx_rate = train %>%
+  select(over_avg_rx_rate) %>%
+  .$over_avg_rx_rate
+knn_test_rx_rate = test %>%
+  select(over_avg_rx_rate) %>%
+  .$over_avg_rx_rate
+
+set.seed(1)
+knn_pred_1 = knn(knn_train,
+               knn_test,
+               knn_train_rx_rate,
+               k = 1)
+
+table(knn_pred_1, knn_test_rx_rate)
+mean(knn_pred_1 == knn_test_rx_rate)
+
+knn_pred_3 = knn(knn_train,
+               knn_test,
+               knn_train_rx_rate,
+               k = 3)
+
+table(knn_pred_3, knn_test_rx_rate)
+mean(knn_pred_3 == knn_test_rx_rate)
+
+knn_pred_5 = knn(knn_train,
+               knn_test,
+               knn_train_rx_rate,
+               k = 5)
+
+table(knn_pred_5, knn_test_rx_rate)
+mean(knn_pred_5 == knn_test_rx_rate)
+
+knn_pred_10 = knn(knn_train,
+               knn_test,
+               knn_train_rx_rate,
+               k = 10)
+
+table(knn_pred_10, knn_test_rx_rate)
+mean(knn_pred_10 == knn_test_rx_rate)
+```
 
 ## Method 2: KNN
+In this attempt, we used KNN with high school graduation rate and unemployment rate. In this case, after trying with several different values of k (1, 3, 5, 10), we found that we were predicting with around 50% accuracy, and that there wasn't a significant change in accuracy when we changed k, indicating that perhaps KNN isn't the right method here.
