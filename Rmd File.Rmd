@@ -122,12 +122,25 @@ As we began to wind down our preliminary visualizations, we decided to determine
 working_data$over_avg_rx_rate = 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
 
+## setting up testing & training datasets
+working_data$id <- 1:nrow(working_data)
+train = working_data %>% dplyr::sample_frac(.75)
+test = dplyr::anti_join(working_data, train, by = 'id')
+
+## logistic regression
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                     hs_graduation_rate,
                   data=working_data,
                   family = binomial)
 summary(glm_fit)
+
+## knn
+knn_train = train %>% select()
+knn_test = test %>% select()
+knn_train_rx_rate = train %>% select()
 ```
 
 ## Method 1: Logistic Regression
 For this first attempt, we considered unemployment rate and high school graduation rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). These two predictors were chosen due to their slight indicated correlation with opiod prescribing rate in Plot 4. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both predictors here are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independant, and we actually found some correlation between high school graduation rate and unemployment rate.
+
+## Method 2: KNN
