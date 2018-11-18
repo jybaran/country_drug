@@ -171,10 +171,10 @@ glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, "High", "Low"))
 
 glm_pred <- cbind(test, glm_pred)
-glm_pred <- glm_pred %>%
+glm_pred %>%
   count(pred, over_avg_rx_rate) %>%
   spread(over_avg_rx_rate, n, fill = 0)
-glm_pred <- glm_pred %>%
+glm_pred %>%
   summarize(score = mean(pred == over_avg_rx_rate), 
             recip = mean(pred != over_avg_rx_rate))
 
