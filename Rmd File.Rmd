@@ -185,14 +185,65 @@ glm_pred %>%
 ## Method 1: Logistic Regression
 For this first attempt, we considered unemployment rate, high school graduation rate, average age, population, male proportion, number of needle exchange programs, and poverty rate as predictors of opioid prescribing rate (above or below average, when looking at the country as a whole). Based on p-values, it looks like population, male proportion, number of needle exchanges, and poverty rate are unlikely to be strongly related to over-average prescription of opioids. The smallest p-value here is for high school graduation rate, and the negative coefficient suggests that as high school gradation rate in a county rises, the rate of opiod prescription is less likely to be greater than average. The p-values for both high school graduation rate and unemployment rate are very small, less than 0.01, so there's evidence that there is an association between them and prescribing rate. One concern for this step is it assumes the predictors are independent, and we actually found some correlation between high school graduation rate and unemployment rate in plot 4.
 
-In our second attempt at Logistic Regression (glm_party_fit), we incorporated our variable of most interest, which is a four-level indicator of state legislature party dominance, as well as our assortment of race and ethnicity-related variables (given as proportions of the counties' populations). The variable `state-legislature` reports party dominance (Republican or Democrat) in the following manner: "Democrat" indicates Democratic control of both houses, "Republican" represents Republican control of both houses, "Split" indicates Democratic control in one house and Republican control in the other, and "Unicameral" applies only to counties in Nebraska (the state has a single legislative house). Democratic control was set as our reference group. We observe in the summary output that Republican control of both houses is significantly associated with an increase in the liklihood that a county will have an opioid prescription rate above the median (p-value < 0.01). This is highly encouraging, as this is the result we expected to see, based on our intuition.
+In our second attempt at Logistic Regression (glm_party_fit), we incorporated our variable of most interest, which is a four-level indicator of state legislature party dominance, as well as our assortment of race and ethnicity-related variables (given as proportions of the counties' populations). The variable `state-legislature` reports party dominance (Republican or Democrat) in the following manner: "Democrat" indicates Democratic control of both houses, "Republican" represents Republican control of both houses, "Split" indicates Democratic control in one house and Republican control in the other, and "Unicameral" applies only to counties in Nebraska (the state has a single legislative house). Democratic control was set as our reference group. We observe in the summary output that Republican control of both houses is significantly associated with an increase in the liklihood that a county will have an opioid prescription rate above the median (p-value < 0.01). This is highly encouraging, as this is the result we expected to see, based on our intuition. The test error for this model is approximately 40%, which is better than random chance, but perhaps not ideal.
 
 ```{r, message = FALSE, warning = FALSE}
+## Ridge regression for logistic regression
+set.seed(1)
+library(glmnet)
+working_full <- na.omit(working_data) %>%
+  select(unemployment_rate, hs_graduation_rate, average_age, population, male_proportion, white_proportion, black_proportion, american_indian_proportion, asian_proportion, hawaiian_pacific_proportion, interracial_proportion, hispanic_proportion, state_legislature, syringe_exchange, num_exchange, immunity_for_possession_of_naloxone_no_script, prescriber_immunity_criminal, poverty_rate, opioid_prescribing_rate)
 
+train <- working_full %>%
+  sample_frac(0.75)
+test <- working_full %>%
+  setdiff(train)
 
+x_train <- model.matrix(opioid_prescribing_rate ~ ., train)[,-19]
+x_test <- model.matrix(opioid_prescribing_rate ~ ., test)[,-19]
+
+y_train <- train %>%
+  select(opioid_prescribing_rate) %>%
+  unlist() %>%
+  as.numeric()
+
+y_test <- test %>%
+  select(opioid_prescribing_rate) %>%
+  unlist() %>%
+  as.numeric()
+
+grid <- 10^seq(10, -2, length = 100)
+cv_ridge <- cv.glmnet(x_train, y_train, alpha = 0)
+plot(cv_ridge)
+
+bestlam <- cv_ridge$lambda.min
+
+ridge_pred <- predict(cv_ridge, s = bestlam, newx = x_test)
+mean((ridge_pred - y_test)^2)
+
+out <- glmnet(x_test, y_test, alpha = 0)
+predict(out, type = "coefficients", s = bestlam)[1:20,]
+
+##################################
+## Lasso
+
+lasso_cv <- cv.glmnet(x_train, y_train, alpha = 1)
+plot(lasso_cv)
+
+bestlam <- lasso_cv$lambda.min
+
+lasso_mod <- glmnet(x_train, y_train, alpha = 1, lambda = grid)
+
+lasso_pred <- predict(lasso_mod, s = bestlam, newx = x_test)
+mean((lasso_pred - y_test)^2)
+
+lasso_coef <- predict(lasso_mod, type = "coefficients", s = bestlam)[1:20,]
+lasso_coef
+lasso_coef[lasso_coef != 0]
 ```
 
 ```{r}
+library(class)
 ## knn
 knn_train = train %>%
   select(unemployment_rate, hs_graduation_rate)
@@ -236,6 +287,7 @@ knn_pred_10 = knn(knn_train,
 
 table(knn_pred_10, knn_test_rx_rate)
 mean(knn_pred_10 == knn_test_rx_rate)
+
 ```
 
 ## Method 2: KNN
