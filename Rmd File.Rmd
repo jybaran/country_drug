@@ -236,6 +236,9 @@ working_full$over_avg_rx_rate = 0
 working_full$over_avg_rx_rate[working_data$opioid_prescribing_rate  >
                                 median(working_data$opioid_prescribing_rate)] = 1
 
+working_full$over_avg_rx_rate = 0
+working_full$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
+
 train <- working_full %>%
   sample_frac(0.75)
 test <- working_full %>%
