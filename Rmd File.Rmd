@@ -242,6 +242,8 @@ lasso_coef
 lasso_coef[lasso_coef != 0]
 ```
 
+Method 2: We considered approaching ridge regression and lasso for determining regression predictors (especially since our opioid prescription rate can be given as either a continuous numeric variable or a categorial variable). For both methods, test MSE was greater than 2, with a slight improvement (-0.2) when using lasso to select predictors. This is not tremendously encouraging. Based on these results, and our desire to be able to provide clear and consise interpretations of coefficients and model fit (as is often the priority in public health research, when possible), we feel that fine-tuning a logistic regression model may be our best bet to be able to produce salient results with interpretability. 
+
 ```{r}
 library(class)
 ## knn
@@ -290,9 +292,5 @@ mean(knn_pred_10 == knn_test_rx_rate)
 
 ```
 
-## Method 2: KNN
+## Method 3: KNN
 In this attempt, we used KNN with high school graduation rate and unemployment rate. In this case, after trying with several different values of k (1, 3, 5, 10), we found that we were predicting with around 50% accuracy, and that there wasn't a significant change in accuracy when we changed k, indicating that perhaps KNN isn't the right method here.
-
-## Method 3: ??? to classify states as over- or under-prescribing (relative to country-wide average)
-
-Probably not KNN because KNN requires numeric predictors, and we would need to figure out how to make evenly spaced numeric representations of each state.
