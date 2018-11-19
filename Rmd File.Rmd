@@ -22,7 +22,7 @@ If you are prioritizing classification, you could try kNN, QDA, LDA, and Logisti
 If your plan was to do classification and then regression, could the class on November 12 provide inspiration?
 Leverage cross-validation with different number of folds to tune various hyper-parameters (such as penalties or the k in kNN).
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 ## reading in data files, joining to access prescribing behavior (response vars)
 library(tidyverse)
 library(corrplot)
@@ -48,7 +48,7 @@ working_data <- County_Drug %>%
 
 ```
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 
 ## some visualizations
 
@@ -93,7 +93,7 @@ As we are limited to calculating a correlation matrix for numeric variables, thi
 ## Plot 5: Scatterplot of opioid prescription rate versus change in that rate (since 2013)
 This final scatterplot was created in order to investigate the relationship between prescription rate and the change in this rate since 2013. We wanted to evaluate whether high prescribing rates were coupled with significant decreases or increases in those rates over the temporal span between 2013 and 2015; we observed that the changes in rates are primarily clustered in the range [-5, 5] and that these changes guide prescription rates to within [1, 10], primarily. There is a single highly unusual county indicated as having both a prescribing rate and change in rate of 31.76; after looking specifically at this county, we have determined that perhaps prescription rate data was not available for this area in 2013, and so the "change in rate" simply jumped when data were eventually added. We will consider whether to include this case if change in prescription rate becomes a variable we'd like to explore further.
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 ## numerical summaries
 library(mosaic)
 library(Hmisc)
@@ -132,7 +132,7 @@ We wanted to determine whether there might be a significant association between 
 ## Summary 4: Highest prescribing states
 As we began to wind down our preliminary visualizations, we decided to determine which 5 states had the highest average (mean) prescribing rates and which had the lowest. The highest states included Nevada, Washington, Utah, Colorado, and Oregon, while the lowest were Rhode Island, New York, North Dakota, Massachusetts, and New Jersey (both lists in descending order). This summary has helped us to better observe the presence of a regional divide in prescribing practices (east vs. west), and it presents some interesting ideas as we think about ways in which we may want to expand on our data (i.e. categorizing states by region to perform more aggregate analyses).
 
-```{r}
+```{r, eval = FALSE}
 ## methods set up
 library(class)
 
@@ -149,7 +149,7 @@ set.seed(1)
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 ## logistic regression
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 hs_graduation_rate +
@@ -207,7 +207,7 @@ For this first attempt, we considered unemployment rate, high school graduation 
 
 In our second attempt at Logistic Regression (glm_party_fit), we incorporated our variable of most interest, which is a four-level indicator of state legislature party dominance, as well as our assortment of race and ethnicity-related variables (given as proportions of the counties' populations). The variable `state-legislature` reports party dominance (Republican or Democrat) in the following manner: "Democrat" indicates Democratic control of both houses, "Republican" represents Republican control of both houses, "Split" indicates Democratic control in one house and Republican control in the other, and "Unicameral" applies only to counties in Nebraska (the state has a single legislative house). Democratic control was set as our reference group. We observe in the summary output that Republican control of both houses is significantly associated with an increase in the liklihood that a county will have an opioid prescription rate above the median (p-value < 0.01). This is highly encouraging, as this is the result we expected to see, based on our intuition. The test error for this model is approximately 40%, which is better than random chance, but perhaps not ideal.
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 ## Ridge regression for logistic regression
 set.seed(1)
 library(glmnet)
@@ -286,7 +286,7 @@ lasso_coef[lasso_coef != 0]
 
 Method 2: We considered approaching ridge regression and lasso for determining regression predictors (especially since our opioid prescription rate can be given as either a continuous numeric variable or a categorial variable). For both methods, test MSE was greater than 2, with a slight improvement (-0.2) when using lasso to select predictors. This is not tremendously encouraging. Based on these results, and our desire to be able to provide clear and consise interpretations of coefficients and model fit (as is often the priority in public health research, when possible), we feel that fine-tuning a logistic regression model may be our best bet to be able to produce salient results with interpretability. 
 
-```{r}
+```{r, eval = FALSE}
 library(class)
 ## knn
 knn_train = train %>%
@@ -336,3 +336,11 @@ mean(knn_pred_10 == knn_test_rx_rate)
 
 ## Method 3: KNN
 In this attempt, we used KNN with high school graduation rate and unemployment rate. In this case, after trying with several different values of k (1, 3, 5, 10), we found that we were predicting with around 50% accuracy, and that there wasn't a significant change in accuracy when we changed k, indicating that perhaps KNN isn't the right method here.
+
+
+## Works Cited
+1. Lopez G. How to get Americans to support solutions to the opioid epidemic. Vox. https://www.vox.com/policy-and-politics/2018/9/13/17852100/opioid-epidemic-solutions-survey. Published September 13, 2018. Accessed November 1, 2018.
+2. Ashton M, Lenton S, Mitcheson L, Nelles B, Stimson G. $\textit{A Review of the Evidence-Base for Harm Reduction}$
+$\textit{Approaches to Drug Use Neil Hunt with Contributions From.}$ https://www.hri.global/files/2010/05/31/HIVTop50Documents11.pdf. Accessed November 1, 2018.
+3. Opioid Data Analysis and Resources. https://www.cdc.gov/drugoverdose/data/analysis.html. Published
+2018. Accessed November 1, 2018.
