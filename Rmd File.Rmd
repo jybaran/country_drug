@@ -3,14 +3,13 @@ title: "Rmd File"
 author: "Learn Against The Machine"
 date: "November 14, 2018"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 editor_options:
   chunk_output_type: console
 ---
 
 ## Instructions
-
 
 Attempt to implement at least 3 versions of your team's highest priority method as outlined in the revised proposal. This could look like:
 
@@ -41,7 +40,7 @@ working_data <- County_Drug %>%
 
 ```
 
-```{r, messaage = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE}
 
 ## some visualizations
 
@@ -122,8 +121,8 @@ As we began to wind down our preliminary visualizations, we decided to determine
 ## methods set up
 library(class)
 
-working_data$over_avg_rx_rate = "Low"
-working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = "High"
+working_data$over_avg_rx_rate = 0
+working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
 
 ## setting up testing & training datasets
 working_data$id <- 1:nrow(working_data)
@@ -143,8 +142,8 @@ glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 male_proportion +
                 num_exchange +
                 poverty_rate,
-                  data = working_data,
-                  family = binomial)
+                  data=working_data,
+                  family = "binomial")
 summary(glm_fit)
 
 glm_party_fit <- glm(over_avg_rx_rate ~ 
@@ -168,7 +167,7 @@ glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + a
 
 glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
-  mutate(pred = ifelse(probs > 0.5, "High", "Low"))
+  mutate(pred = ifelse(probs > 0.5, 1, 0))
 
 glm_pred <- cbind(test, glm_pred)
 glm_pred %>%
