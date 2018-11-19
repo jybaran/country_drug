@@ -3,10 +3,10 @@ title: "Rmd File"
 author: "Learn Against The Machine"
 date: "November 14, 2018"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Instructions
@@ -30,7 +30,15 @@ County_Drug <- read_csv("County_Drug.csv")
 prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
   mutate(county_id = paste0("05000US", FIPS)) %>%
   subset(select = -c(`State Name`, `State Abbreviation`, `County Name`, `FIPS`))
-colnames(prescribing_behavior) <- c("part_d_prescribers", "part_d_opioid_prescribers", "opioid_claims", "extended_release_opioid_claims", "overall_claims", "opioid_prescribing_rate", "extended_release_prescription_rate", "change_in_rate", "county_id")
+colnames(prescribing_behavior) <- c("part_d_prescribers",
+                                    "part_d_opioid_prescribers",
+                                    "opioid_claims",
+                                    "extended_release_opioid_claims",
+                                    "overall_claims",
+                                    "opioid_prescribing_rate",
+                                    "extended_release_prescription_rate",
+                                    "change_in_rate",
+                                    "county_id")
 
 ## joining data sets
 working_data <- County_Drug %>%
@@ -54,7 +62,14 @@ ggplot(working_data, aes(x = num_exchange, y = opioid_prescribing_rate)) +
   geom_point()
 
 numeric_only <- working_data[, sapply(working_data, is.numeric)] %>%
-  select(unemployment_rate, hs_graduation_rate, male_proportion, female_proportion, num_exchange, poverty_rate, opioid_prescribing_rate, change_in_rate)
+  select(unemployment_rate,
+         hs_graduation_rate,
+         male_proportion,
+         female_proportion,
+         num_exchange,
+         poverty_rate,
+         opioid_prescribing_rate,
+         change_in_rate)
 cor_data <- cor(numeric_only) %>%
   round(2)
 corrplot(cor_data, method = "circle")
@@ -174,7 +189,7 @@ glm_pred %>%
   count(pred, over_avg_rx_rate) %>%
   spread(over_avg_rx_rate, n, fill = 0)
 glm_pred %>%
-  summarize(score = mean(pred == over_avg_rx_rate), 
+  summarise(score = mean(pred == over_avg_rx_rate), 
             recip = mean(pred != over_avg_rx_rate))
 
 ```
@@ -192,6 +207,9 @@ set.seed(1)
 library(glmnet)
 working_full <- na.omit(working_data) %>%
   select(unemployment_rate, hs_graduation_rate, average_age, population, male_proportion, white_proportion, black_proportion, american_indian_proportion, asian_proportion, hawaiian_pacific_proportion, interracial_proportion, hispanic_proportion, state_legislature, syringe_exchange, num_exchange, immunity_for_possession_of_naloxone_no_script, prescriber_immunity_criminal, poverty_rate, opioid_prescribing_rate)
+
+working_full$over_avg_rx_rate = 0
+working_full$over_avg_rx_rate[working_data$opioid_prescribing_rate >median(working_data$opioid_prescribing_rate)] = 1
 
 train <- working_full %>%
   sample_frac(0.75)
