@@ -143,7 +143,7 @@ glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 male_proportion +
                 num_exchange +
                 poverty_rate,
-                  data=working_data,
+                  data = working_data,
                   family = binomial)
 summary(glm_fit)
 
