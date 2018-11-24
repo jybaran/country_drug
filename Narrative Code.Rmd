@@ -204,3 +204,46 @@ pR2(step_model)
 
 
 ```
+
+```{r, message = FALSE, warning = FALSE}
+library(glmnet)
+set.seed(3)
+
+x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[,-22]
+y <- full_mod_set %>%
+  select(over_avg_rx_rate) %>%
+  unlist() %>%
+  as.numeric()
+
+lasso_train <- full_mod_set %>%
+  sample_frac(0.75)
+lasso_test <- full_mod_set %>%
+  setdiff(lasso_train)
+
+lasso_train_x <- model.matrix(over_avg_rx_rate~.,lasso_train)[,-22]
+lasso_test_x <- model.matrix(over_avg_rx_rate~.,lasso_test)[,-22]
+
+lasso_train_y <- lasso_train %>%
+  select(over_avg_rx_rate) %>%
+  unlist() %>%
+  as.numeric()
+lasso_test_y <- lasso_test %>%
+  select(over_avg_rx_rate) %>%
+  unlist() %>%
+  as.numeric()
+
+grid <- 10^seq(10, -2, length = 100)
+
+lasso_mod <- glmnet(lasso_train_x, lasso_train_y, alpha = 1, lambda = grid)
+
+cv_lasso <- cv.glmnet(lasso_train_x, lasso_train_y, alpha = 1, family = "binomial")
+plot(cv_lasso)
+
+bestlam <- cv_lasso$lambda.min
+
+lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
+mean((lasso_pred - lasso_test_y)^2)
+
+######
+
+```
