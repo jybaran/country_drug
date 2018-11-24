@@ -86,7 +86,7 @@ glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate +
                    family = "binomial")
 summary(glm_sig_fit)
 
-glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
+glm_probs = data.frame(probs = predict(glm_party_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
@@ -132,6 +132,8 @@ coef(step_model)
 
 summary(step_model)
 
+cbind(coef(step_model), coef(full_mod))
+
 glm_step_probs = data.frame(probs = predict(step_model, newdata = step_test, type = "response"))
 glm_step_pred <- glm_step_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -145,9 +147,32 @@ glm_step_pred %>%
             recip = mean(pred != over_avg_rx_rate))
 ```
 
+```{r, messaage = FALSE, warning = FALSE}
+## Log regression with only sig vars from stepwise
+
+sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + average_age + no_hispanic_proportion + state_legislature + poverty_rate + change_in_rate, data = step_test, family = "binomial")
+summary(sig_step_mod)
+
+new_probs = data.frame(probs = predict(sig_step_mod, newdata = step_test, type = "response"))
+new_pred <- new_probs %>%
+  mutate(pred = ifelse(probs > 0.5, 1, 0))
+
+new_pred <- cbind(step_test, new_pred)
+new_pred %>%
+  count(pred, over_avg_rx_rate) %>%
+  spread(over_avg_rx_rate, n, fill = 0)
+new_pred %>%
+  summarise(score = mean(pred == over_avg_rx_rate), 
+            recip = mean(pred != over_avg_rx_rate))
+
+```
+
 ```{r, message = FALSE, warning = FALSE}
 library(pROC)
 library(ROCR)
+
+
+cbind(coef(step_model), coef(full_mod))
 
 ## ROC curve for full model
 prob <- predict(full_mod, newdata = step_test, type = "response")
@@ -169,5 +194,11 @@ auc
 step_auc <- performance(step_pred, measure = "auc")
 step_auc <- step_auc@y.values[[1]]
 step_auc
+
+## k-fold crossval for log
+library(caret)
+
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+
 
 ```
