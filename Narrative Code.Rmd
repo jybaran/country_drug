@@ -5,26 +5,130 @@ date: "November 24, 2018"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
+## reading in data files, joining to access prescribing behavior (response vars)
+set.seed(3)
+library(tidyverse)
+County_Drug <- read_csv("County_Drug.csv")
+prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
+  mutate(county_id = paste0("05000US", FIPS)) %>%
+  subset(select = -c(`State Name`, `State Abbreviation`, `County Name`, `FIPS`))
+colnames(prescribing_behavior) <- c("part_d_prescribers",
+                                    "part_d_opioid_prescribers",
+                                    "opioid_claims",
+                                    "extended_release_opioid_claims",
+                                    "overall_claims",
+                                    "opioid_prescribing_rate",
+                                    "extended_release_prescription_rate",
+                                    "change_in_rate",
+                                    "county_id")
+
+## joining data sets
+working_data <- County_Drug %>%
+  inner_join(prescribing_behavior, by = "county_id") %>%
+  na.omit() %>%
+  subset(select = -c(X1))
+
 ```
 
-## R Markdown
+```{r, eval = FALSE}
+## methods set up
+library(class)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+working_data$over_avg_rx_rate = 0
+working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
+                                median(working_data$opioid_prescribing_rate)] = 1
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## setting up testing & training datasets
+working_data$id <- 1:nrow(working_data)
+train = working_data %>% dplyr::sample_frac(.75)
+test = dplyr::anti_join(working_data, train, by = 'id')
 
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+```{r, eval = FALSE}
+## logistic regression
+glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
+                hs_graduation_rate +
+                average_age +
+                population +
+                male_proportion +
+                num_exchange +
+                poverty_rate,
+                  data=working_data,
+                  family = "binomial")
+summary(glm_fit)
 
-You can also embed plots, for example:
+glm_party_fit <- glm(over_avg_rx_rate ~ 
+                       unemployment_rate + 
+                       hs_graduation_rate + 
+                       average_age + 
+                       white_proportion + 
+                       black_proportion + 
+                       american_indian_proportion + 
+                       asian_proportion + 
+                       hawaiian_pacific_proportion + 
+                       interracial_proportion + 
+                       hispanic_proportion + 
+                       state_legislature, 
+                     data = working_data, 
+                     family = "binomial")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+summary(glm_party_fit)
+
+glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate +
+                     hs_graduation_rate +
+                     average_age +
+                     poverty_rate +
+                     unemployment_rate +
+                     state_legislature,
+                   data = train,
+                   family = "binomial")
+summary(glm_sig_fit)
+
+glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
+glm_pred <- glm_probs %>%
+  mutate(pred = ifelse(probs > 0.5, 1, 0))
+
+glm_pred <- cbind(test, glm_pred)
+glm_pred %>%
+  count(pred, over_avg_rx_rate) %>%
+  spread(over_avg_rx_rate, n, fill = 0)
+glm_pred %>%
+  summarise(score = mean(pred == over_avg_rx_rate), 
+            recip = mean(pred != over_avg_rx_rate))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, message = FALSE, warning = FALSE}
+library(MASS)
+
+minus_vector <- c(1, 5, 6, 24, 25, 26, 27, 28, 29, 30, 33)
+full_mod_set <- working_data[,-minus_vector]
+
+full_mod_set$id <- 1:nrow(full_mod_set)
+step_train = full_mod_set %>% dplyr::sample_frac(.75)
+step_test = dplyr::anti_join(full_mod_set, train, by = 'id')
+step_train <- step_train[, -23]
+step_test <- step_test[, -23]
+
+full_mod <- glm(over_avg_rx_rate ~ ., data = step_train, family = "binomial")
+
+step_model <- full_mod %>%
+  stepAIC(trace = FALSE, direction = "both")
+coef(step_model)
+
+summary(step_model)
+
+glm_step_probs = data.frame(probs = predict(step_model, newdata = step_test, type = "response"))
+glm_step_pred <- glm_step_probs %>%
+  mutate(pred = ifelse(probs > 0.5, 1, 0))
+
+glm_step_pred <- cbind(step_test, glm_step_pred)
+glm_step_pred %>%
+  count(pred, over_avg_rx_rate) %>%
+  spread(over_avg_rx_rate, n, fill = 0)
+glm_step_pred %>%
+  summarise(score = mean(pred == over_avg_rx_rate), 
+            recip = mean(pred != over_avg_rx_rate))
+```
