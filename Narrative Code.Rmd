@@ -195,6 +195,12 @@ step_auc <- performance(step_pred, measure = "auc")
 step_auc <- step_auc@y.values[[1]]
 step_auc
 
+varImp(step_model)
+
+### pseudo-r-squared
+
+library(pscl)
+pR2(step_model)
 
 
 ```
