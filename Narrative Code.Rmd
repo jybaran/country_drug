@@ -114,8 +114,20 @@ step_test <- step_test[, -23]
 
 full_mod <- glm(over_avg_rx_rate ~ ., data = step_train, family = "binomial")
 
+glm_probs = data.frame(probs = predict(full_mod, newdata = step_test, type = "response"))
+glm_pred <- glm_probs %>%
+  mutate(pred = ifelse(probs > 0.5, 1, 0))
+
+glm_pred <- cbind(step_test, glm_pred)
+glm_pred %>%
+  count(pred, over_avg_rx_rate) %>%
+  spread(over_avg_rx_rate, n, fill = 0)
+glm_pred %>%
+  summarise(score = mean(pred == over_avg_rx_rate), 
+            recip = mean(pred != over_avg_rx_rate))
+
 step_model <- full_mod %>%
-  stepAIC(trace = FALSE, direction = "both")
+  stepAIC(trace = FALSE, direction = "forward")
 coef(step_model)
 
 summary(step_model)
@@ -131,4 +143,31 @@ glm_step_pred %>%
 glm_step_pred %>%
   summarise(score = mean(pred == over_avg_rx_rate), 
             recip = mean(pred != over_avg_rx_rate))
+```
+
+```{r, message = FALSE, warning = FALSE}
+library(pROC)
+library(ROCR)
+
+## ROC curve for full model
+prob <- predict(full_mod, newdata = step_test, type = "response")
+pred <- prediction(prob, step_test$over_avg_rx_rate)
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+plot(perf)
+
+## ROC curve for step model
+step_prob <- predict(step_model, newdata = step_test, type = "response")
+step_pred <- prediction(step_prob, step_test$over_avg_rx_rate)
+step_perf <- performance(step_pred, measure = "tpr", x.measure = "fpr")
+plot(step_perf, colorize = TRUE)
+plot(step_perf, add = TRUE)
+
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+step_auc <- performance(step_pred, measure = "auc")
+step_auc <- step_auc@y.values[[1]]
+step_auc
+
 ```
