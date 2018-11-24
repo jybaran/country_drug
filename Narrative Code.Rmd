@@ -195,10 +195,6 @@ step_auc <- performance(step_pred, measure = "auc")
 step_auc <- step_auc@y.values[[1]]
 step_auc
 
-## k-fold crossval for log
-library(caret)
-
-ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
 
 
 ```
