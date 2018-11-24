@@ -66,6 +66,7 @@ numeric_only <- working_data[, sapply(working_data, is.numeric)] %>%
          hs_graduation_rate,
          male_proportion,
          female_proportion,
+         average_age,
          num_exchange,
          poverty_rate,
          opioid_prescribing_rate,
