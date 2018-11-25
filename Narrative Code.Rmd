@@ -151,7 +151,8 @@ glm_step_pred %>%
 ```{r, messaage = FALSE, warning = FALSE}
 ## Log regression with only sig vars from stepwise
 
-sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + average_age + no_hispanic_proportion + state_legislature + poverty_rate + change_in_rate, data = step_test, family = "binomial")
+## can put change_inrate back in this model...I was just testing to see what it would do to remove it.
+sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + average_age + no_hispanic_proportion + state_legislature + poverty_rate, data = step_test, family = "binomial")
 summary(sig_step_mod)
 
 new_probs = data.frame(probs = predict(sig_step_mod, newdata = step_test, type = "response"))
