@@ -86,7 +86,7 @@ glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate +
                    family = "binomial")
 summary(glm_sig_fit)
 
-glm_probs = data.frame(probs = predict(glm_party_fit, newdata = test, type = "response"))
+glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
@@ -105,12 +105,13 @@ library(MASS)
 
 minus_vector <- c(1, 5, 6, 24, 25, 26, 27, 28, 29, 30, 33)
 full_mod_set <- working_data[,-minus_vector]
+full_mod_set <- full_mod_set[,-21]
 
 full_mod_set$id <- 1:nrow(full_mod_set)
 step_train = full_mod_set %>% dplyr::sample_frac(.75)
 step_test = dplyr::anti_join(full_mod_set, train, by = 'id')
-step_train <- step_train[, -23]
-step_test <- step_test[, -23]
+step_train <- step_train[, -22]
+step_test <- step_test[, -22]
 
 full_mod <- glm(over_avg_rx_rate ~ ., data = step_train, family = "binomial")
 
