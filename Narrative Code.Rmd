@@ -32,9 +32,9 @@ working_data <- County_Drug %>%
 ```
 
 ```{r, eval = FALSE}
-## methods set up
 library(class)
 
+## creating over vs. under median rate variable
 working_data$over_avg_rx_rate = 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
                                 median(working_data$opioid_prescribing_rate)] = 1
@@ -47,7 +47,7 @@ test = dplyr::anti_join(working_data, train, by = 'id')
 ```
 
 ```{r, eval = FALSE}
-## logistic regression
+## logistic regression: intuitive vars
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 hs_graduation_rate +
                 average_age +
