@@ -9,6 +9,13 @@ output: pdf_document
 ## reading in data files, joining to access prescribing behavior (response vars)
 set.seed(3)
 library(tidyverse)
+library(class)
+library(MASS)
+library(pROC)
+library(ROCR)
+library(pscl)
+library(glmnet)
+
 County_Drug <- read_csv("County_Drug.csv")
 prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
   mutate(county_id = paste0("05000US", FIPS)) %>%
@@ -32,8 +39,6 @@ working_data <- County_Drug %>%
 ```
 
 ```{r, eval = FALSE}
-library(class)
-
 ## creating over vs. under median rate variable
 working_data$over_avg_rx_rate = 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
@@ -59,6 +64,7 @@ glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                   family = "binomial")
 summary(glm_fit)
 
+## logistic regression: intuitive vars, race/ethnicity vars, and state legislature var
 glm_party_fit <- glm(over_avg_rx_rate ~ 
                        unemployment_rate + 
                        hs_graduation_rate + 
@@ -76,6 +82,7 @@ glm_party_fit <- glm(over_avg_rx_rate ~
 
 summary(glm_party_fit)
 
+## logisticreg regression: vars significant in last model
 glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate +
                      hs_graduation_rate +
                      average_age +
@@ -86,6 +93,7 @@ glm_sig_fit <- glm(over_avg_rx_rate ~ unemployment_rate +
                    family = "binomial")
 summary(glm_sig_fit)
 
+## testing prediction accuracy of all three models in turn (fill in model name for different calculations)
 glm_probs = data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -101,20 +109,24 @@ glm_pred %>%
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-library(MASS)
 
+## creating data set without county-specific vars (i.e. county name, state, etc.)
+##Note: Could be interesting to test state as a variable
 minus_vector <- c(1, 5, 6, 24, 25, 26, 27, 28, 29, 30, 33)
 full_mod_set <- working_data[,-minus_vector]
 full_mod_set <- full_mod_set[,-21]
 
+## creating test and training sets for stepwise model selection
 full_mod_set$id <- 1:nrow(full_mod_set)
 step_train = full_mod_set %>% dplyr::sample_frac(.75)
 step_test = dplyr::anti_join(full_mod_set, train, by = 'id')
 step_train <- step_train[, -22]
 step_test <- step_test[, -22]
 
+## designating full model with all vars
 full_mod <- glm(over_avg_rx_rate ~ ., data = step_train, family = "binomial")
 
+## prediction accuracy of full mod
 glm_probs = data.frame(probs = predict(full_mod, newdata = step_test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -127,14 +139,17 @@ glm_pred %>%
   summarise(score = mean(pred == over_avg_rx_rate), 
             recip = mean(pred != over_avg_rx_rate))
 
+## calculating stepwise model, forward selection, from full mod
 step_model <- full_mod %>%
   stepAIC(trace = FALSE, direction = "forward")
 coef(step_model)
 
 summary(step_model)
 
+## comparing stepwise and full model for coefficient values (they are the same)
 cbind(coef(step_model), coef(full_mod))
 
+## checking prediction accuracy for forward stepwise model selection
 glm_step_probs = data.frame(probs = predict(step_model, newdata = step_test, type = "response"))
 glm_step_pred <- glm_step_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -155,6 +170,7 @@ glm_step_pred %>%
 sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate + hs_graduation_rate + average_age + no_hispanic_proportion + state_legislature + poverty_rate, data = step_test, family = "binomial")
 summary(sig_step_mod)
 
+## checking prediction accuracy for model with significant vars from stepwise model
 new_probs = data.frame(probs = predict(sig_step_mod, newdata = step_test, type = "response"))
 new_pred <- new_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -170,12 +186,6 @@ new_pred %>%
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-library(pROC)
-library(ROCR)
-
-
-cbind(coef(step_model), coef(full_mod))
-
 ## ROC curve for full model
 prob <- predict(full_mod, newdata = step_test, type = "response")
 pred <- prediction(prob, step_test$over_avg_rx_rate)
@@ -189,28 +199,28 @@ step_perf <- performance(step_pred, measure = "tpr", x.measure = "fpr")
 plot(step_perf, colorize = TRUE)
 plot(step_perf, add = TRUE)
 
+## area under ROC curve for full model
 auc <- performance(pred, measure = "auc")
 auc <- auc@y.values[[1]]
 auc
 
+## area under ROC curve for forward stepwise model
 step_auc <- performance(step_pred, measure = "auc")
 step_auc <- step_auc@y.values[[1]]
 step_auc
 
+## relative variable importance for forward stepwise model
 varImp(step_model)
 
 ### pseudo-r-squared
-
-library(pscl)
 pR2(step_model)
 
 
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-library(glmnet)
-set.seed(3)
 
+## creating training and test sets for lasso (splitting up x and y)
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[,-22]
 y <- full_mod_set %>%
   select(over_avg_rx_rate) %>%
@@ -222,6 +232,7 @@ lasso_train <- full_mod_set %>%
 lasso_test <- full_mod_set %>%
   setdiff(lasso_train)
 
+## removing id variable
 lasso_train_x <- model.matrix(over_avg_rx_rate~.,lasso_train)[,-22]
 lasso_test_x <- model.matrix(over_avg_rx_rate~.,lasso_test)[,-22]
 
@@ -236,14 +247,19 @@ lasso_test_y <- lasso_test %>%
 
 grid <- 10^seq(10, -2, length = 100)
 
+## producing initial lasso mod
 lasso_mod <- glmnet(lasso_train_x, lasso_train_y, alpha = 1, lambda = grid)
 
+## using cross val to select optimal lambda
 cv_lasso <- cv.glmnet(lasso_train_x, lasso_train_y, alpha = 1, family = "binomial")
 plot(cv_lasso)
 
 bestlam <- cv_lasso$lambda.min
 
+## lasso model with optimal lambda value
 lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
+
+## lasso test MSE
 mean((lasso_pred - lasso_test_y)^2)
 
 ######
