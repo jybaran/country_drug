@@ -38,7 +38,7 @@ working_data <- County_Drug %>%
 
 ```
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, message = FALSE, warning = FALSE}
 ## creating over vs. under median rate variable
 working_data$over_avg_rx_rate = 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
@@ -51,7 +51,7 @@ test = dplyr::anti_join(working_data, train, by = 'id')
 
 ```
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, message = FALSE, warning = FALSE}
 ## logistic regression: intuitive vars
 glm_fit = glm(over_avg_rx_rate ~ unemployment_rate +
                 hs_graduation_rate +
@@ -108,7 +108,7 @@ glm_pred %>%
 
 ```
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 
 ## creating data set without county-specific vars (i.e. county name, state, etc.)
 ##Note: Could be interesting to test state as a variable
@@ -163,7 +163,7 @@ glm_step_pred %>%
             recip = mean(pred != over_avg_rx_rate))
 ```
 
-```{r, messaage = FALSE, warning = FALSE}
+```{r, messaage = FALSE, warning = FALSE, eval = FALSE}
 ## Log regression with only sig vars from stepwise
 
 ## can put change_inrate back in this model...I was just testing to see what it would do to remove it.
@@ -185,7 +185,7 @@ new_pred %>%
 
 ```
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 ## ROC curve for full model
 prob <- predict(full_mod, newdata = step_test, type = "response")
 pred <- prediction(prob, step_test$over_avg_rx_rate)
@@ -218,7 +218,7 @@ pR2(step_model)
 
 ```
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
 
 ## creating training and test sets for lasso (splitting up x and y)
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[,-22]
