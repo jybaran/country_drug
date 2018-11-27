@@ -99,7 +99,8 @@ glm_sig_fit <- glm(
 )
 summary(glm_sig_fit)
 
-## testing prediction accuracy of all three models in turn (fill in model name for different calculations)
+## testing prediction accuracy of all three models in turn
+## (fill in model name for different calculations)
 glm_probs <- data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -159,7 +160,9 @@ summary(step_model)
 cbind(coef(step_model), coef(full_mod))
 
 ## checking prediction accuracy for forward stepwise model selection
-glm_step_probs <- data.frame(probs = predict(step_model, newdata = step_test, type = "response"))
+glm_step_probs <- data.frame(probs = predict(step_model,
+                                             newdata = step_test,
+                                             type = "response"))
 glm_step_pred <- glm_step_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
@@ -177,18 +180,21 @@ glm_step_pred %>%
 ```{r, messaage = FALSE, warning = FALSE, eval = FALSE}
 ## Log regression with only sig vars from stepwise
 
-## can put change_inrate back in this model...I was just testing to see what it would do to remove it.
-sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate + 
+## can put change_inrate back in this model...
+## I was just testing to see what it would do to remove it.
+sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate +
                       hs_graduation_rate + 
                       average_age + 
                       no_hispanic_proportion + 
                       state_legislature + 
-                      poverty_rate, 
+                      poverty_rate,
                     data = step_test, family = "binomial")
 summary(sig_step_mod)
 
 ## checking prediction accuracy for model with significant vars from stepwise model
-new_probs <- data.frame(probs = predict(sig_step_mod, newdata = step_test, type = "response"))
+new_probs <- data.frame(probs = predict(sig_step_mod,
+                                        newdata = step_test,
+                                        type = "response"))
 new_pred <- new_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
@@ -277,6 +283,4 @@ lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
 
 ## lasso test MSE
 mean((lasso_pred - lasso_test_y) ^ 2)
-
-######
 ```
