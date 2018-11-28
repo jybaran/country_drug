@@ -8,13 +8,15 @@ output: pdf_document
 ```{r, message = FALSE, warning = FALSE, eval = FALSE}
 ## reading in data files, joining to access prescribing behavior (response vars)
 set.seed(3)
-library(tidyverse)
+library(caret)
 library(class)
+library(dplyr)
+library(glmnet)
 library(MASS)
 library(pROC)
-library(ROCR)
 library(pscl)
-library(glmnet)
+library(ROCR)
+library(tidyverse)
 
 County_Drug <- read_csv("County_Drug.csv")
 prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
