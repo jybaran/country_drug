@@ -247,7 +247,7 @@ pR2(step_model)
 ## creating training and test sets for lasso (splitting up x and y)
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[, -22]
 y <- full_mod_set %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 
@@ -261,11 +261,11 @@ lasso_train_x <- model.matrix(over_avg_rx_rate~., lasso_train)[, -22]
 lasso_test_x <- model.matrix(over_avg_rx_rate~., lasso_test)[, -22]
 
 lasso_train_y <- lasso_train %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 lasso_test_y <- lasso_test %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 
