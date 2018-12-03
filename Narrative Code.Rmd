@@ -408,6 +408,8 @@ bestlam <- cv_lasso$lambda.min
 
 lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
 
+coef(cv_lasso)
+
 ## lasso test MSE
 
 mean((lasso_pred - lasso_test_y) ^ 2)
