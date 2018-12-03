@@ -5,9 +5,14 @@ date: "November 24, 2018"
 output: pdf_document
 ---
 
-```{r, message = FALSE, warning = FALSE, eval = FALSE}
-## reading in data files, joining to access prescribing behavior (response vars)
+```{r Set Up, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Set Seed 
+
 set.seed(3)
+
+## Load Packages
+
 library(tidyverse)
 library(class)
 library(MASS)
@@ -15,11 +20,28 @@ library(pROC)
 library(ROCR)
 library(pscl)
 library(glmnet)
+library(partykit)
+library(caret)
+library(dplyr)
+library(readr)
+```
+
+####**Producing Final Dataset**
+
+```{r Load and Tidy and Join Data, message = FALSE, warning = FALSE}
+
+## Reading: county data
 
 County_Drug <- read_csv("County_Drug.csv")
+
+## Reading and Cleaning: presribing behavior data
+
 prescribing_behavior <- read_csv("293 COUNTY DATA/prescribing_behavior.csv") %>%
   mutate(county_id = paste0("05000US", FIPS)) %>%
   subset(select = -c(`State Name`, `State Abbreviation`, `County Name`, `FIPS`))
+
+## Renaming: variable names
+
 colnames(prescribing_behavior) <- c(
   "part_d_prescribers",
   "part_d_opioid_prescribers",
@@ -32,29 +54,47 @@ colnames(prescribing_behavior) <- c(
   "county_id"
 )
 
-## joining data sets
+## Joining: county info data and prescribing behavior data
+
 working_data <- County_Drug %>%
   inner_join(prescribing_behavior, by = "county_id") %>%
   na.omit() %>%
   subset(select = -c(X1))
+
+#View(working_data)
 ```
 
-```{r, eval = FALSE, message = FALSE, warning = FALSE}
-## creating over vs. under median rate variable
+```{r Tidy Final Working Data, eval = FALSE, message = FALSE, warning = FALSE}
+
+## Creating: over vs. under median rate variable = opioid_prescribing_rate
+
 working_data$over_avg_rx_rate <- 0
 working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
   median(working_data$opioid_prescribing_rate)] <- 1
 
-## setting up testing & training datasets
+#View(working_data)
+```
+
+####**Training and Testing Datasets Based on Working Dataset**
+
+```{r Train and Test Datasets, eval = FALSE, message = FALSE, warning = FALSE}
+
+## Setting Up: training & testing datasets
+
 working_data$id <- 1:nrow(working_data)
 train <- working_data %>% dplyr::sample_frac(.75)
 test <- dplyr::anti_join(working_data, train, by = "id")
 ```
 
-```{r, eval = FALSE, message = FALSE, warning = FALSE}
-## logistic regression: intuitive vars
-glm_fit <- glm(
-  over_avg_rx_rate ~ unemployment_rate +
+####**Logistic Regression Models**
+
+```{r Intuitive Model, eval = FALSE, message = FALSE, warning = FALSE}
+
+## Logistic Regression: intuitive variables (unemployment rate, HS graduation rate, average age, population, proportion of population who is male, number of exchanges, poverty rate)
+
+glm_intuitive_fit <- glm(
+  over_avg_rx_rate ~ 
+    unemployment_rate +
     hs_graduation_rate +
     average_age +
     population +
@@ -64,10 +104,14 @@ glm_fit <- glm(
   data = working_data,
   family = "binomial"
 )
-summary(glm_fit)
+summary(glm_intuitive_fit)
+```
 
-## logistic regression: intuitive vars, race/ethnicity vars, and state legislature var
-glm_party_fit <- glm(
+```{r Intuative and Other Demographics Model, eval = FALSE, message = FALSE, warning = FALSE}
+
+## Logistic Regression: statistically significant variables from intuitive logistic regression model, race/ethnicity, and state legislature variables (unemployment rate, HS graduation rate, average age, proportion of population who is white, proportion of population who is black, proportion of population who is american indian, proportion of population who is asian, proportion of population who is hawaiian pacific, proportion of population who is interracial, proportion of population who is hispanic, state legislature dominant political ideology)
+
+glm_intuitive_demographics_fit <- glm(
   over_avg_rx_rate ~
   unemployment_rate +
     hs_graduation_rate +
@@ -84,57 +128,80 @@ glm_party_fit <- glm(
   family = "binomial"
 )
 
-summary(glm_party_fit)
+summary(glm_intuitive_demographics_fit)
+```
 
-## logisticreg regression: vars significant in last model
-glm_sig_fit <- glm(
-  over_avg_rx_rate ~ unemployment_rate +
+```{r Significant Model (built with training dataset), eval = FALSE, message = FALSE, warning = FALSE}
+
+## Logistic Regression: statistically significant variables from intuitive and other demographics logistic regression model (unemployment rate, HS graduation rate, average, poverty rate, state legislature dominant political ideology)
+
+## Important Change: building the model using the training dataset we created, instead of the working dataset
+
+glm_significant_fit <- glm(
+  over_avg_rx_rate ~ 
+    unemployment_rate +
     hs_graduation_rate +
     average_age +
     poverty_rate +
-    unemployment_rate +
     state_legislature,
   data = train,
   family = "binomial"
 )
-summary(glm_sig_fit)
 
-## testing prediction accuracy of all three models in turn
+summary(glm_significant_fit)
+```
+
+####**Testing Significant Model's Prediction Accuracy (Full Model and Forward Stepwise Model)**
+
+```{r Signifcant Model, eval = FALSE, message = FALSE, warning = FALSE}
+
+## Testing: prediction accuracy of all three models in turn
 ## (fill in model name for different calculations)
-glm_probs <- data.frame(probs = predict(glm_sig_fit, newdata = test, type = "response"))
+glm_probs <- data.frame(probs = predict(glm_significant_fit, newdata = test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
 glm_pred <- cbind(test, glm_pred)
+
 glm_pred %>%
   count(pred, over_avg_rx_rate) %>%
   spread(over_avg_rx_rate, n, fill = 0)
+
 glm_pred %>%
   summarise(
     score = mean(pred == over_avg_rx_rate),
     recip = mean(pred != over_avg_rx_rate)
   )
+
 ```
 
-```{r, message = FALSE, warning = FALSE, eval = FALSE}
+```{r Creating Full Model, message = FALSE, warning = FALSE, eval = FALSE}
 
-## creating data set without county-specific vars (i.e. county name, state, etc.)
+## Creating: data set without county-specific variables (i.e. county name, state, etc.)
 ## Note: Could be interesting to test state as a variable
+
 minus_vector <- c(1, 5, 6, 24, 25, 26, 27, 28, 29, 30, 33)
 full_mod_set <- working_data[, -minus_vector]
 full_mod_set <- full_mod_set[, -21]
 
-## creating test and training sets for stepwise model selection
+```
+
+```{r Setting Up Forward Stepwise Model Selection, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Creating: test and training sets for stepwise model selection
+
 full_mod_set$id <- 1:nrow(full_mod_set)
 step_train <- full_mod_set %>% dplyr::sample_frac(.75)
 step_test <- dplyr::anti_join(full_mod_set, train, by = "id")
 step_train <- step_train[, -22]
 step_test <- step_test[, -22]
 
-## designating full model with all vars
+## Creating: full model with all variables
+
 full_mod <- glm(over_avg_rx_rate ~ ., data = step_train, family = "binomial")
 
-## prediction accuracy of full mod
+## Predicting: accuracy of full model
+
 glm_probs <- data.frame(probs = predict(full_mod, newdata = step_test, type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
@@ -148,18 +215,29 @@ glm_pred %>%
     score = mean(pred == over_avg_rx_rate),
     recip = mean(pred != over_avg_rx_rate)
   )
+```
 
-## calculating stepwise model, forward selection, from full mod
+```{r Forward Stepwise Model Selection, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Calculating: stepwise model, forward selection, from full model
+
 step_model <- full_mod %>%
   stepAIC(trace = FALSE, direction = "forward")
 coef(step_model)
 
 summary(step_model)
+```
 
-## comparing stepwise and full model for coefficient values (they are the same)
+```{r Comparing Forward Stepwise Model and Full Model, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Comparing: stepwise and full model for coefficient values (they are the same)
+
 cbind(coef(step_model), coef(full_mod))
+```
 
-## checking prediction accuracy for forward stepwise model selection
+
+```{r Checking Forward Stepwise Model Selection, message = FALSE, warning = FALSE, eval = FALSE}
+## Checking: prediction accuracy for forward stepwise model selection
 glm_step_probs <- data.frame(probs = predict(step_model,
                                              newdata = step_test,
                                              type = "response"))
@@ -167,9 +245,11 @@ glm_step_pred <- glm_step_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
 glm_step_pred <- cbind(step_test, glm_step_pred)
+
 glm_step_pred %>%
   count(pred, over_avg_rx_rate) %>%
   spread(over_avg_rx_rate, n, fill = 0)
+
 glm_step_pred %>%
   summarise(
     score = mean(pred == over_avg_rx_rate),
@@ -177,11 +257,14 @@ glm_step_pred %>%
   )
 ```
 
-```{r, messaage = FALSE, warning = FALSE, eval = FALSE}
-## Log regression with only sig vars from stepwise
+####**Testing Change In Rate Variable**
 
-## can put change_inrate back in this model...
-## I was just testing to see what it would do to remove it.
+```{r Change In Rate Variable, messaage = FALSE, warning = FALSE, eval = FALSE}
+
+## Logistic regression with only significant variables from forward stepwise model.
+
+## Comparing: how does the variable "change_inrate" impact the effectiveness of the model 
+
 sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate +
                       hs_graduation_rate + 
                       average_age + 
@@ -189,9 +272,11 @@ sig_step_mod <- glm(over_avg_rx_rate ~ unemployment_rate +
                       state_legislature + 
                       poverty_rate,
                     data = step_test, family = "binomial")
+
 summary(sig_step_mod)
 
-## checking prediction accuracy for model with significant vars from stepwise model
+## Checking: prediction accuracy for model with significant vars from stepwise model
+
 new_probs <- data.frame(probs = predict(sig_step_mod,
                                         newdata = step_test,
                                         type = "response"))
@@ -209,40 +294,66 @@ new_pred %>%
   )
 ```
 
-```{r, message = FALSE, warning = FALSE, eval = FALSE}
+####**Receiver Operating Characteristic Curves**
+
+```{r Full Model, message = FALSE, warning = FALSE, eval = FALSE}
+
 ## ROC curve for full model
+
 prob <- predict(full_mod, newdata = step_test, type = "response")
 pred <- prediction(prob, step_test$over_avg_rx_rate)
 perf <- performance(pred, measure = "tpr", x.measure = "fpr")
 plot(perf)
 
-## ROC curve for step model
+## Area under ROC curve for full model
+
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+```
+
+```{r Forward Stepwise Model, message = FALSE, warning = FALSE, eval = FALSE}
+
+## ROC curve for forward stepwise model
+
 step_prob <- predict(step_model, newdata = step_test, type = "response")
 step_pred <- prediction(step_prob, step_test$over_avg_rx_rate)
 step_perf <- performance(step_pred, measure = "tpr", x.measure = "fpr")
 plot(step_perf, colorize = TRUE)
 plot(step_perf, add = TRUE)
 
-## area under ROC curve for full model
-auc <- performance(pred, measure = "auc")
-auc <- auc@y.values[[1]]
-auc
-
 ## area under ROC curve for forward stepwise model
+
 step_auc <- performance(step_pred, measure = "auc")
 step_auc <- step_auc@y.values[[1]]
 step_auc
+```
 
+```{r Forward Stepwise Model Variable Importance, message = FALSE, warning = FALSE, eval = FALSE}
 ## relative variable importance for forward stepwise model
+
 varImp(step_model)
 
 ### pseudo-r-squared
+
 pR2(step_model)
+
 ```
 
-```{r, message = FALSE, warning = FALSE, eval = FALSE}
+####**Lasso**
 
-## creating training and test sets for lasso (splitting up x and y)
+```{r Test and Training Datasets, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Troubleshooting: weird errors when running code
+
+install.packages("dplyr")
+library(dplyr)
+install.packages("glmnet")
+library(glmnet)
+
+## Creating: training and test sets for lasso (splitting up x and y)
+
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[, -22]
 y <- full_mod_set %>%
   select(over_avg_rx_rate) %>%
@@ -254,7 +365,8 @@ lasso_train <- full_mod_set %>%
 lasso_test <- full_mod_set %>%
   setdiff(lasso_train)
 
-## removing id variable
+## Removing: id variable
+
 lasso_train_x <- model.matrix(over_avg_rx_rate~., lasso_train)[, -22]
 lasso_test_x <- model.matrix(over_avg_rx_rate~., lasso_test)[, -22]
 
@@ -268,21 +380,26 @@ lasso_test_y <- lasso_test %>%
   as.numeric()
 
 grid <- 10 ^ seq(10, -2, length = 100)
+```
 
-## producing initial lasso mod
+```{r Lasso Model, message = FALSE, warning = FALSE, eval = FALSE}
+
+## Producing :initial lasso model
+
 lasso_mod <- glmnet(lasso_train_x, lasso_train_y, alpha = 1, lambda = grid)
 
-## using cross val to select optimal lambda
+## Using: cross validation to select optimal lambda
 cv_lasso <- cv.glmnet(lasso_train_x, lasso_train_y, alpha = 1, family = "binomial")
 plot(cv_lasso)
 
 bestlam <- cv_lasso$lambda.min
 
-## lasso model with optimal lambda value
+## Building: lasso model with optimal lambda value
+
 lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
 
 ## lasso test MSE
-mean((lasso_pred - lasso_test_y) ^ 2)
-```
 
-DUMB
+mean((lasso_pred - lasso_test_y) ^ 2)
+
+```
