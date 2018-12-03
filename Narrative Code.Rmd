@@ -10,15 +10,21 @@ output: pdf_document
 ## Set Seed 
 
 set.seed(3)
+<<<<<<< HEAD
 
 ## Load Packages
 
 library(tidyverse)
+=======
+library(caret)
+>>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
 library(class)
+library(dplyr)
+library(glmnet)
 library(MASS)
 library(pROC)
-library(ROCR)
 library(pscl)
+<<<<<<< HEAD
 library(glmnet)
 library(partykit)
 library(caret)
@@ -31,6 +37,10 @@ library(readr)
 ```{r Load and Tidy and Join Data, message = FALSE, warning = FALSE}
 
 ## Reading: county data
+=======
+library(ROCR)
+library(tidyverse)
+>>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
 
 County_Drug <- read_csv("County_Drug.csv")
 
@@ -356,7 +366,7 @@ library(glmnet)
 
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[, -22]
 y <- full_mod_set %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 
@@ -371,11 +381,11 @@ lasso_train_x <- model.matrix(over_avg_rx_rate~., lasso_train)[, -22]
 lasso_test_x <- model.matrix(over_avg_rx_rate~., lasso_test)[, -22]
 
 lasso_train_y <- lasso_train %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 lasso_test_y <- lasso_test %>%
-  select(over_avg_rx_rate) %>%
+  dplyr::select(over_avg_rx_rate) %>%
   unlist() %>%
   as.numeric()
 
@@ -401,5 +411,9 @@ lasso_pred <- predict(lasso_mod, s = bestlam, newx = lasso_test_x)
 ## lasso test MSE
 
 mean((lasso_pred - lasso_test_y) ^ 2)
+<<<<<<< HEAD
 
 ```
+=======
+```
+>>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
