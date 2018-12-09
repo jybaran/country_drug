@@ -10,37 +10,27 @@ output: pdf_document
 ## Set Seed 
 
 set.seed(3)
-<<<<<<< HEAD
 
 ## Load Packages
 
-library(tidyverse)
-=======
 library(caret)
->>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
 library(class)
 library(dplyr)
 library(glmnet)
 library(MASS)
+library(partykit)
 library(pROC)
 library(pscl)
-<<<<<<< HEAD
-library(glmnet)
-library(partykit)
-library(caret)
-library(dplyr)
 library(readr)
+library(ROCR)
+library(tidyverse)
 ```
 
 ####**Producing Final Dataset**
 
-```{r Load and Tidy and Join Data, message = FALSE, warning = FALSE}
+```{r Load and Tidy and Join Data, message = FALSE, warning = FALSE, eval = FALSE}
 
 ## Reading: county data
-=======
-library(ROCR)
-library(tidyverse)
->>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
 
 County_Drug <- read_csv("County_Drug.csv")
 
@@ -100,7 +90,9 @@ test <- dplyr::anti_join(working_data, train, by = "id")
 
 ```{r Intuitive Model, eval = FALSE, message = FALSE, warning = FALSE}
 
-## Logistic Regression: intuitive variables (unemployment rate, HS graduation rate, average age, population, proportion of population who is male, number of exchanges, poverty rate)
+## Logistic Regression: intuitive variables (unemployment rate, HS graduation rate,
+## average age, population, proportion of population who is male, number of exchanges,
+## poverty rate)
 
 glm_intuitive_fit <- glm(
   over_avg_rx_rate ~ 
@@ -119,7 +111,14 @@ summary(glm_intuitive_fit)
 
 ```{r Intuative and Other Demographics Model, eval = FALSE, message = FALSE, warning = FALSE}
 
-## Logistic Regression: statistically significant variables from intuitive logistic regression model, race/ethnicity, and state legislature variables (unemployment rate, HS graduation rate, average age, proportion of population who is white, proportion of population who is black, proportion of population who is american indian, proportion of population who is asian, proportion of population who is hawaiian pacific, proportion of population who is interracial, proportion of population who is hispanic, state legislature dominant political ideology)
+## Logistic Regression: statistically significant variables from intuitive logistic
+## regression model, race/ethnicity, and state legislature variables
+## (unemployment rate, HS graduation rate, average age, proportion of population
+## who is white, proportion of population who is black, proportion of population who
+## is american indian, proportion of population who is asian, proportion of
+## population who is hawaiian pacific, proportion of population who is interracial,
+## proportion of population who is hispanic, state legislature dominant political
+## ideology)
 
 glm_intuitive_demographics_fit <- glm(
   over_avg_rx_rate ~
@@ -143,9 +142,12 @@ summary(glm_intuitive_demographics_fit)
 
 ```{r Significant Model (built with training dataset), eval = FALSE, message = FALSE, warning = FALSE}
 
-## Logistic Regression: statistically significant variables from intuitive and other demographics logistic regression model (unemployment rate, HS graduation rate, average, poverty rate, state legislature dominant political ideology)
+## Logistic Regression: statistically significant variables from intuitive and other
+## demographics logistic regression model (unemployment rate, HS graduation rate,
+## average, poverty rate, state legislature dominant political ideology)
 
-## Important Change: building the model using the training dataset we created, instead of the working dataset
+## Important Change: building the model using the training dataset we created, instead of
+## the working dataset
 
 glm_significant_fit <- glm(
   over_avg_rx_rate ~ 
@@ -167,7 +169,9 @@ summary(glm_significant_fit)
 
 ## Testing: prediction accuracy of all three models in turn
 ## (fill in model name for different calculations)
-glm_probs <- data.frame(probs = predict(glm_significant_fit, newdata = test, type = "response"))
+glm_probs <- data.frame(probs = predict(glm_significant_fit,
+                                        newdata = test,
+                                        type = "response"))
 glm_pred <- glm_probs %>%
   mutate(pred = ifelse(probs > 0.5, 1, 0))
 
@@ -357,11 +361,6 @@ pR2(step_model)
 
 ## Troubleshooting: weird errors when running code
 
-install.packages("dplyr")
-library(dplyr)
-install.packages("glmnet")
-library(glmnet)
-
 ## Creating: training and test sets for lasso (splitting up x and y)
 
 x <- model.matrix(over_avg_rx_rate ~., full_mod_set)[, -22]
@@ -413,9 +412,5 @@ coef(cv_lasso)
 ## lasso test MSE
 
 mean((lasso_pred - lasso_test_y) ^ 2)
-<<<<<<< HEAD
+```
 
-```
-=======
-```
->>>>>>> 758f4fbd955ab21078f434c27ff823c18c09550e
