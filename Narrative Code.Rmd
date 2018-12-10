@@ -225,6 +225,10 @@ glm_pred %>%
     score = mean(pred == over_avg_rx_rate),
     recip = mean(pred != over_avg_rx_rate)
   )
+
+## Linear regression with states predictor var
+lm_state <- lm(opioid_prescribing_rate ~ state + state_legislature, data = working_data)
+summary(lm_state)
 ```
 
 ```{r Forward Stepwise Model Selection, message = FALSE, warning = FALSE, eval = FALSE}
