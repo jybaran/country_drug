@@ -26,7 +26,7 @@ library(ROCR)
 library(tidyverse)
 ```
 
-####**Producing Final Dataset**
+#### **Producing Final Dataset**
 
 ```{r Load and Tidy and Join Data, message = FALSE, warning = FALSE, eval = FALSE}
 
@@ -75,7 +75,7 @@ working_data$over_avg_rx_rate[working_data$opioid_prescribing_rate >
 #View(working_data)
 ```
 
-####**Training and Testing Datasets Based on Working Dataset**
+#### **Training and Testing Datasets Based on Working Dataset**
 
 ```{r Train and Test Datasets, eval = FALSE, message = FALSE, warning = FALSE}
 
@@ -86,7 +86,7 @@ train <- working_data %>% dplyr::sample_frac(.75)
 test <- dplyr::anti_join(working_data, train, by = "id")
 ```
 
-####**Logistic Regression Models**
+#### **Logistic Regression Models**
 
 ```{r Intuitive Model, eval = FALSE, message = FALSE, warning = FALSE}
 
@@ -163,7 +163,7 @@ glm_significant_fit <- glm(
 summary(glm_significant_fit)
 ```
 
-####**Testing Significant Model's Prediction Accuracy (Full Model and Forward Stepwise Model)**
+#### **Testing Significant Model's Prediction Accuracy (Full Model and Forward Stepwise Model)**
 
 ```{r Signifcant Model, eval = FALSE, message = FALSE, warning = FALSE}
 
@@ -275,7 +275,7 @@ glm_step_pred %>%
   )
 ```
 
-####**Testing Change In Rate Variable**
+#### **Testing Change In Rate Variable**
 
 ```{r Change In Rate Variable, messaage = FALSE, warning = FALSE, eval = FALSE}
 
@@ -312,7 +312,7 @@ new_pred %>%
   )
 ```
 
-####**Receiver Operating Characteristic Curves**
+#### **Receiver Operating Characteristic Curves**
 
 ```{r Full Model, message = FALSE, warning = FALSE, eval = FALSE}
 
@@ -359,7 +359,7 @@ pR2(step_model)
 
 ```
 
-####**Lasso**
+#### **Lasso**
 
 ```{r Test and Training Datasets, message = FALSE, warning = FALSE, eval = FALSE}
 
